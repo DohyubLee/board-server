@@ -18,6 +18,12 @@ app.use(cors())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(session({
     secret: 'asdfw',
+    // rolling: true,
+    // name: 'session_id',
+    // cookie: {
+    //     domain: '127.0.0.1:4200',
+    //     httpOnly: false
+    // },
     resave: false,
     saveUninitialized: true,
     store: new MySQLStore({
@@ -28,6 +34,11 @@ app.use(session({
         database: 'board'
     })
 }))
+app.use(function(req, res, next) {
+    console.log('this is middleware');
+    console.log('req.session: ',req.sessionID);
+    next();
+});
 /****** 미들 웨어 *******/
 app.post('/login', (req, res) => {
     console.log('login',req);
@@ -46,24 +57,28 @@ app.post('/login', (req, res) => {
     })
 })
 app.get('/logout', (req, res) => {
-    delete req.session.name;
-    req.session.save(() => {   //save() 데이터스토어 저장이 완료되었을때 콜백함수를 실행시킨다
-        res.status(200).json({ msg: 'session delete', session: false });
-    })
+    console.log('req.session: ',req.sessionID);
+    // req.session.destroy();
+    // req.session.save(() => {   //save() 데이터스토어 저장이 완료되었을때 콜백함수를 실행시킨다
+    //     res.status(200).json({ msg: 'session delete', session: false });
+    // })
+})
+app.get('/gettest', (req, res) => {
+    res.status(200).json({ msg: req.session.name});
 })
 app.post('/register', (req, res) => {
-    console.log('register:',req);
     var user = {
-        email: req.body.email,
-        password: req.body.password,
-        name: req.body.name
+        email: req.query.email,
+        password: req.query.password,
+        name: req.query.name
     }
     var sql = `INSERT INTO user (email, password, name, regDate) VALUES (?, ?, ?, now())`;
     pool.query(sql, [user.email, user.password, user.name], (error, result) => {
         if (error) {
             res.status(400).json({ msg: 'register failure', session: false});
         } else {
-            req.session.name = req.body.name;
+            console.log('req.session: ',req.sessionID);
+            req.session.name = req.query.name;
             req.session.save(() => {
                 res.status(200).json({ msg: 'session create', session: true });
             })
