@@ -87,14 +87,23 @@ app.post('/board-detail', (req, res) => {
     var id = req.body.id;
     console.log('body: ', req.body);
     console.log('id: ', id);
-    var sql = `SELECT posts.id, posts.title, posts.description, posts.saveDate, posts.user_id, user.name FROM posts INNER JOIN user ON posts.user_id=user.id WHERE posts.id=?`;
-    pool.query(sql, [id], (error, result) => {
+    var sql1 = `SELECT posts.id, posts.title, posts.description, posts.saveDate, posts.user_id, user.name FROM posts INNER JOIN user ON posts.user_id=user.id WHERE posts.id=?`;
+    var sql2 = `SELECT comment.id, comment.user_id, comment.description, comment.saveDate, user.name FROM comment LEFT JOIN user ON user.id=comment.user_id WHERE posts_id=?`;
+    pool.query(sql1, [id], (error, result) => {
         if (error) {
             console.log('error: ', error);
             res.status(400).json({ msg: 'query failure'});
         } else {
-            console.log('result: ',result[0]);
-            res.status(200).json(result[0]);
+            pool.query(sql2, [id], (error, results) => {
+                if (error) {
+                    console.log('error: ', error);
+                    res.status(400).json({ msg: 'comment query failure'});
+                } else {
+                    console.log('result: ',result[0]);
+                    console.log('results: ',results);
+                    res.status(200).json({result: result[0], results: results});
+                }
+            })
         }
     })
 })
@@ -120,6 +129,116 @@ app.post('/board-edit-save', (req, res) => {
         } else {
             console.log('result: ',result);
             res.status(200).json({ msg: 'query success', postId: req.body.id});
+        }
+    })
+})
+app.post('/user', (req, res) => {
+    var id = req.body.id;
+    var sql = `SELECT email, name FROM user WHERE id=?`;
+    pool.query(sql, [id], (error, result) => {
+        if (error) {
+            console.log('error: ', error);
+            res.status(400).json({ msg: 'query failure'});
+        } else {
+            console.log('result: ',result[0]);
+            res.status(200).json(result[0]);
+        }
+    })
+})
+app.post('/usermodify', (req, res) => {
+    console.log(req.body);
+    var sql = 'UPDATE user SET name=?, password=?, updateDate=now() WHERE email=?'
+    pool.query(sql, [req.body.name, req.body.password, req.body.email], (error, result) => {
+        if (error) {
+            console.log('error: ', error);
+            res.status(400).json({ msg: 'query failure'});
+        } else {
+            console.log('result: ',result);
+            res.status(200).json({ msg: 'query success'});
+        }
+    })
+})
+app.post('/userdelete', (req, res) => {
+    console.log(req.body);
+    var sql1 = 'SELECT * FROM user WHERE email=?'
+    var sql2 = 'DELETE FROM user WHERE email=?'
+    pool.query(sql1, [req.body.email], (error, result) => {
+        if (error) {
+            console.log('error: ', error);
+            res.status(400).json({ msg: 'query failure'});
+        } else {
+            console.log('result: ',result[0].password);
+            console.log('password: ',req.body.password);
+            if (result[0].password === req.body.password) {
+                pool.query(sql2, [req.body.email], (error, result) => {
+                    if (error) {
+                        console.log('error: ', error);
+                        res.status(400).json({ msg: 'delete query failure'});
+                    } else {
+                        console.log('result: ',result);
+                        res.status(200).json({ msg: 'account delete success'});
+                    }
+                })
+            } else {
+                res.status(400).json({ msg: 'Passwords do not match.'});
+            }
+        }
+    })
+})
+app.post('/post-delete', (req, res) => {
+    console.log(req.body);
+    var sql = 'DELETE FROM posts WHERE id=?'
+    pool.query(sql, [req.body.id], (error, result) => {
+        if (error) {
+            console.log('error: ', error);
+            res.status(400).json({ msg: 'query failure'});
+        } else {
+            console.log('result: ',result);
+            res.status(200).json({ msg: 'post delete success'});
+        }
+    })
+})
+app.post('/comment-insert', (req, res) => {
+    console.log(req.body);
+    var sql1 = `INSERT INTO comment (user_id, description, saveDate, posts_id) VALUES (?, ?, now(), ?)`;
+    var sql2 = `SELECT comment.id, comment.user_id, comment.description, comment.saveDate, user.name FROM comment LEFT JOIN user ON user.id=comment.user_id WHERE posts_id=?`;
+    pool.query(sql1, [req.body.curruntUser, req.body.comment, req.body.postId], (error, result) => {
+        if (error) {
+            console.log('error: ', error);
+            res.status(400).json({ msg: 'query failure'});
+        } else {
+            pool.query(sql2, [req.body.postId], (error, results) => {
+                if (error) {
+                    console.log('error: ', error);
+                    res.status(400).json({ msg: 'comment query failure'});
+                } else {
+                    console.log('result: ',result);
+                    console.log('results: ',results);
+                    res.status(200).json({ msg: 'comment insert success', results: results});
+                }
+            })
+        }
+    })
+})
+app.post('/comment-delete', (req, res) => {
+    console.log(req.body);
+    var sql1 = 'DELETE FROM comment WHERE id=?'
+    var sql2 = `SELECT comment.id, comment.user_id, comment.description, comment.saveDate, user.name FROM comment LEFT JOIN user ON user.id=comment.user_id WHERE posts_id=?`;
+    pool.query(sql1, [req.body.id], (error, result) => {
+        if (error) {
+            console.log('error: ', error);
+            res.status(400).json({ msg: 'query failure'});
+        } else {
+            pool.query(sql2, [req.body.postId], (error, results) => {
+                if (error) {
+                    console.log('error: ', error);
+                    res.status(400).json({ msg: 'comment query failure'});
+                } else {
+                    console.log('result: ',result);
+                    console.log('results: ',results);
+                    res.status(200).json({ msg: 'comment delete success', results: results});
+                }
+            })
         }
     })
 })
