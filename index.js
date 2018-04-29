@@ -246,7 +246,7 @@ app.get('/test', (req, res) => {
     res.send('hello test~!!~');
 })
 
-app.listen(443, function () {
-    console.log('Example app listening on port 443!');
+app.listen(80, function () {
+    console.log('Example app listening on port 80!');
     console.log('press ctrl + c exit');
 });
