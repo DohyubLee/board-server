@@ -16,6 +16,9 @@ app.use(cors())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 /****** 미들 웨어 *******/
+app.get('/', (req, res) => {
+    res.send('hello index');
+})
 app.post('/login', (req, res) => {
     var email = req.body.email;
     var password = req.body.password;
@@ -241,9 +244,6 @@ app.post('/comment-delete', (req, res) => {
             })
         }
     })
-})
-app.get('/test', (req, res) => {
-    res.send('hello test~!!~');
 })
 
 app.listen(80, function () {
