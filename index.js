@@ -242,6 +242,9 @@ app.post('/comment-delete', (req, res) => {
         }
     })
 })
+app.get('/test', (req, res) => {
+    res.send('hello test~!!~');
+})
 
 app.listen(443, function () {
     console.log('Example app listening on port 443!');
