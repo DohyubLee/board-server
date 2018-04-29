@@ -244,6 +244,6 @@ app.post('/comment-delete', (req, res) => {
 })
 
 app.listen(80, function () {
-    console.log('Example app listening on port 3000!');
+    console.log('Example app listening on port 80!');
     console.log('press ctrl + c exit');
 });
