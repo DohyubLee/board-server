@@ -246,7 +246,7 @@ app.post('/comment-delete', (req, res) => {
     })
 })
 
-app.listen(1337, function () {
-    console.log('Example app listening on port 1337!');
+app.listen(443, function () {
+    console.log('Example app listening on port 443!');
     console.log('press ctrl + c exit');
 });
